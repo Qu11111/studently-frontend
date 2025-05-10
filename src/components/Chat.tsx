@@ -133,7 +133,9 @@ function Chat({ onClose, initialUserId }: ChatProps) {
       return;
     }
 
-    const socket = new WebSocket(`ws://localhost:5000`);
+    const socket = new WebSocket(
+  `${process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace('https://', 'wss://') : 'ws://localhost:5000'}`
+);
     socket.onopen = () => {
       console.log('WebSocket подключён');
       setWs(socket);
