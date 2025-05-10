@@ -12,7 +12,7 @@ interface Creator {
 function Welcome() {
   const navigate = useNavigate();
   const [creators, setCreators] = useState<Creator[]>([]);
-  const BASE_URL = 'http://localhost:5000';
+  const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
   // Загрузка случайных создателей
   const fetchRandomCreators = async () => {

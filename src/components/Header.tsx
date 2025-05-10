@@ -28,7 +28,7 @@ function Header() {
   const [showChatModal, setShowChatModal] = useState(false);
   const [showSubscriptionsModal, setShowSubscriptionsModal] = useState(false);
   const [purchasedSubscriptions, setPurchasedSubscriptions] = useState<Subscription[]>([]);
-  const BASE_URL = 'http://localhost:5000';
+  const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
   // Проверка токена и загрузка пользователя
   const fetchUser = async (token: string | null) => {

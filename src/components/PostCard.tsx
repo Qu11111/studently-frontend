@@ -25,7 +25,7 @@ interface PostCardProps {
 }
 
 function PostCard({ post, onLike, onOpenPost, currentUser, comments }: PostCardProps) {
-  const BASE_URL = 'http://localhost:5000';
+  const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md h-[450px] flex flex-col overflow-hidden">
