@@ -7,10 +7,10 @@
     "skipLibCheck": true,
 
     /* Bundler mode */
-    "allowImportingTsExtensions": true,
+    "allowImportingTsExtensions": false,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "noEmit": true,
+    "noEmit": false,
     "composite": true,
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true,
