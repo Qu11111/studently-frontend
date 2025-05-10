@@ -12,8 +12,9 @@ interface Creator {
 function Welcome() {
   const navigate = useNavigate();
   const [creators, setCreators] = useState<Creator[]>([]);
-  const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-
+const BASE_URL = 'https://studently-backend.onrender.com';
+console.log('BASE_URL:', BASE_URL);
+console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
   // Загрузка случайных создателей
   const fetchRandomCreators = async () => {
     try {

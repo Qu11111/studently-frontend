@@ -6,7 +6,7 @@ function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const BASE_URL = 'https://studently-backend.onrender.com';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

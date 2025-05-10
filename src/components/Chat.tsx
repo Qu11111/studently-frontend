@@ -36,7 +36,7 @@ function Chat({ onClose, initialUserId }: ChatProps) {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [error, setError] = useState('');
-  const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const BASE_URL = 'https://studently-backend.onrender.com';
 
   // Загрузка данных текущего пользователя
   useEffect(() => {

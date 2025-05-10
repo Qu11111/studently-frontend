@@ -52,7 +52,7 @@ function Settings({ user, onUpdate, onSubscriptionUpdate }: SettingsProps) {
   const [editPriceError, setEditPriceError] = useState('');
   const [editDescriptionError, setEditDescriptionError] = useState('');
 
-  const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const BASE_URL = 'https://studently-backend.onrender.com';
 
   // Загрузка подписок
   useEffect(() => {

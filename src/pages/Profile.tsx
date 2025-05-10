@@ -69,7 +69,7 @@ function Profile() {
   const [contentError, setContentError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const BASE_URL = 'https://studently-backend.onrender.com';
   const isOwnProfile = !userId || (currentUser && userId === currentUser._id);
 
   // Загрузка данных

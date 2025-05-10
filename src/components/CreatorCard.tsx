@@ -9,7 +9,7 @@ interface CreatorCardProps {
 
 function CreatorCard({ id, username, avatar, description }: CreatorCardProps) {
   const navigate = useNavigate();
-  const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const BASE_URL = 'https://studently-backend.onrender.com';
 
   return (
     <div
