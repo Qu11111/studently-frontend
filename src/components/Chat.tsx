@@ -134,8 +134,7 @@ function Chat({ onClose, initialUserId }: ChatProps) {
     }
 
     const socket = new WebSocket(
-  `${process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace('https://', 'wss://') : 'ws://localhost:5000'}`
-);
+    'wss://studently-backend.onrender.com');
     socket.onopen = () => {
       console.log('WebSocket подключён');
       setWs(socket);
