@@ -72,6 +72,15 @@ function Profile() {
   const BASE_URL = 'https://studently-backend.onrender.com';
   const isOwnProfile = !userId || (currentUser && userId === currentUser._id);
 
+  // Функция для получения корректного URL
+  const getImageUrl = (url: string | undefined) => {
+    if (!url) return 'https://via.placeholder.com/150';
+    if (url.startsWith('https://res.cloudinary.com')) {
+      return url;
+    }
+    return url.startsWith('/uploads') ? `${BASE_URL}${url}` : url;
+  };
+
   // Загрузка данных
   useEffect(() => {
     const fetchData = async () => {
@@ -423,20 +432,12 @@ function Profile() {
       <div
         className="relative h-48 bg-cover bg-center rounded-lg mb-8"
         style={{
-          backgroundImage: `url(${
-            profileUser?.cover.startsWith('/uploads')
-              ? `${BASE_URL}${profileUser.cover}`
-              : profileUser?.cover || 'https://via.placeholder.com/1200x300'
-          })`,
+          backgroundImage: `url(${getImageUrl(profileUser?.cover)})`,
         }}
       >
         <div className="absolute -bottom-16 left-8">
           <img
-            src={
-              profileUser?.avatar.startsWith('/uploads')
-                ? `${BASE_URL}${profileUser.avatar}`
-                : profileUser?.avatar || 'https://via.placeholder.com/150'
-            }
+            src={getImageUrl(profileUser?.avatar)}
             alt="Аватар"
             className="w-32 h-32 rounded-full border-4 border-white shadow-lg cursor-pointer"
             onClick={() => setShowAvatarModal(true)}
@@ -444,15 +445,11 @@ function Profile() {
         </div>
       </div>
 
-      {showAvatarModal && (
+      {showAvatarModal && profileUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg max-w-3xl">
             <img
-              src={
-                profileUser?.avatar.startsWith('/uploads')
-                  ? `${BASE_URL}${profileUser.avatar}`
-                  : profileUser?.avatar || 'https://via.placeholder.com/150'
-              }
+              src={getImageUrl(profileUser.avatar)}
               alt="Увеличенный аватар"
               className="max-w-full max-h-[80vh] rounded"
             />
@@ -470,11 +467,7 @@ function Profile() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg max-w-lg w-full p-6">
             <img
-              src={
-                selectedSubscription.image.startsWith('/uploads')
-                  ? `${BASE_URL}${selectedSubscription.image}`
-                  : selectedSubscription.image || 'https://via.placeholder.com/150'
-              }
+              src={getImageUrl(selectedSubscription.image)}
               alt={selectedSubscription.name}
               className="w-full max-h-[50vh] rounded object-contain mb-4"
             />
@@ -514,11 +507,11 @@ function Profile() {
                   <div key={index} className="mb-4">
                     {url.endsWith('.mp4') || url.endsWith('.webm') ? (
                       <video controls className="w-full max-h-[70vh] rounded object-contain">
-                        <source src={`${BASE_URL}${url}`} type="video/mp4" />
+                        <source src={getImageUrl(url)} type="video/mp4" />
                       </video>
                     ) : (
                       <img
-                        src={`${BASE_URL}${url}`}
+                        src={getImageUrl(url)}
                         alt="Медиа"
                         className="w-full max-h-[70vh] rounded object-contain"
                       />
@@ -532,23 +525,23 @@ function Profile() {
             <div className="w-1/3 p-4 bg-gray-100 flex flex-col">
               <div className="flex items-center mb-4">
                 <img
-                  src={
-                    profileUser?.avatar.startsWith('/uploads')
-                      ? `${BASE_URL}${profileUser.avatar}`
-                      : profileUser?.avatar || 'https://via.placeholder.com/150'
-                  }
+                  src={getImageUrl(profileUser?.avatar)}
                   alt="Аватар автора"
                   className="w-10 h-10 rounded-full mr-2 cursor-pointer"
                   onClick={() => {
                     setShowPostModal(false);
-                    navigate(`/profile/${profileUser?._id}`);
+                    if (profileUser) {
+                      navigate(`/profile/${profileUser._id}`);
+                    }
                   }}
                 />
                 <span
                   className="font-semibold cursor-pointer hover:underline"
                   onClick={() => {
                     setShowPostModal(false);
-                    navigate(`/profile/${profileUser?._id}`);
+                    if (profileUser) {
+                      navigate(`/profile/${profileUser._id}`);
+                    }
                   }}
                 >
                   {profileUser?.username}
@@ -573,16 +566,14 @@ function Profile() {
                   comments[selectedPost._id].map((comment) => (
                     <div key={comment._id} className="border-t pt-2 mt-2 flex items-start">
                       <img
-                        src={
-                          comment.userId.avatar.startsWith('/uploads')
-                            ? `${BASE_URL}${comment.userId.avatar}`
-                            : comment.userId.avatar || 'https://via.placeholder.com/150'
-                        }
+                        src={getImageUrl(comment.userId.avatar)}
                         alt="Аватар комментатора"
                         className="w-8 h-8 rounded-full mr-2 cursor-pointer"
                         onClick={() => {
                           setShowPostModal(false);
-                          navigate(`/profile/${comment.userId._id}`);
+                          if (comment.userId) {
+                            navigate(`/profile/${comment.userId._id}`);
+                          }
                         }}
                       />
                       <div>
@@ -591,7 +582,9 @@ function Profile() {
                             className="font-semibold cursor-pointer hover:underline"
                             onClick={() => {
                               setShowPostModal(false);
-                              navigate(`/profile/${comment.userId._id}`);
+                              if (comment.userId) {
+                                navigate(`/profile/${comment.userId._id}`);
+                              }
                             }}
                           >
                             {comment.userId.username}:
@@ -815,9 +808,7 @@ function Profile() {
             <div className="mt-2 text-gray-600">
               <p>{profileUser.email}</p>
               <p>{profileUser.description || 'Нет описания'}</p>
-              <p>
-                
-              </p>
+              <p></p>
             </div>
           ) : (
             <p className="text-gray-600 mt-2">Войдите, чтобы увидеть профиль</p>
@@ -888,11 +879,11 @@ function Profile() {
                             }} className="cursor-pointer w-full h-full flex justify-center items-center">
                               {post.media[0].endsWith('.mp4') || post.media[0].endsWith('.webm') ? (
                                 <video controls className="max-w-full max-h-full rounded object-contain">
-                                  <source src={`${BASE_URL}${post.media[0]}`} type="video/mp4" />
+                                  <source src={getImageUrl(post.media[0])} type="video/mp4" />
                                 </video>
                               ) : (
                                 <img
-                                  src={`${BASE_URL}${post.media[0]}`}
+                                  src={getImageUrl(post.media[0])}
                                   alt="Медиа"
                                   className="max-w-full max-h-full rounded object-contain"
                                 />
@@ -961,11 +952,11 @@ function Profile() {
                               <div className="w-full h-full flex justify-center items-center">
                                 {post.media[0].endsWith('.mp4') || post.media[0].endsWith('.webm') ? (
                                   <video className="max-w-full max-h-full rounded object-contain">
-                                    <source src={`${BASE_URL}${post.media[0]}`} type="video/mp4" />
+                                    <source src={getImageUrl(post.media[0])} type="video/mp4" />
                                   </video>
                                 ) : (
                                   <img
-                                    src={`${BASE_URL}${post.media[0]}`}
+                                    src={getImageUrl(post.media[0])}
                                     alt="Медиа"
                                     className="max-w-full max-h-full rounded object-contain"
                                   />
@@ -1015,11 +1006,7 @@ function Profile() {
                   }}
                 >
                   <img
-                    src={
-                      level.image.startsWith('/uploads')
-                        ? `${BASE_URL}${level.image}`
-                        : level.image || 'https://via.placeholder.com/150'
-                    }
+                    src={getImageUrl(level.image)}
                     alt={level.name}
                     className="w-16 h-16 rounded object-cover"
                   />
