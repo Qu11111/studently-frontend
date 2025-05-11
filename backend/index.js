@@ -123,19 +123,18 @@ const validateEmail = (email) => {
 };
 
 // Middleware для проверки токена
-const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
+const auth = (req, res, next) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
   if (!token) {
-    console.log('authMiddleware: Токен не предоставлен');
-    return res.status(401).json({ error: 'Токен не предоставлен' });
+    return res.status(401).json({ error: 'Токен отсутствует' });
   }
 
   try {
-    const decoded = jwt.verify(token, 'secret_key');
-    req.userId = decoded.userId;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
     next();
-  } catch (error) {
-    console.log('authMiddleware: Неверный токен', error.message);
+  } catch (err) {
+    console.error('authMiddleware:', err.message);
     res.status(401).json({ error: 'Неверный токен' });
   }
 };
@@ -548,7 +547,59 @@ app.get('/api/posts/popular', authMiddleware, async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+router.post('/', auth, upload.array('media', 10), async (req, res) => {
+  try {
+    const { title, content, subscriptionLevel } = req.body;
+    const userId = req.user.id;
 
+    if (!title || !content) {
+      return res.status(400).json({ error: 'Title and content are required' });
+    }
+
+    let mediaUrls = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        if (file.size > 200 * 1024 * 1024) {
+          return res.status(400).json({ error: 'File size exceeds 200 MB limit' });
+        }
+
+        const allowedVideoFormats = ['video/mp4', 'video/webm'];
+        if (file.mimetype.startsWith('video/') && !allowedVideoFormats.includes(file.mimetype)) {
+          return res.status(400).json({ error: 'Unsupported video format. Use MP4 or WebM' });
+        }
+
+        console.log(`Uploading file: ${file.originalname}, type: ${file.mimetype}, size: ${file.size} bytes`);
+        const result = await cloudinary.uploader.upload(file.path, {
+          resource_type: 'auto',
+          folder: 'studently/uploads',
+          timeout: 120000,
+        });
+
+        if (!result.secure_url) {
+          console.error('Cloudinary upload failed:', result);
+          return res.status(500).json({ error: 'Failed to upload file to Cloudinary' });
+        }
+
+        mediaUrls.push(result.secure_url);
+      }
+    }
+
+    const post = new Post({
+      title,
+      content,
+      userId,
+      subscriptionLevel: subscriptionLevel || null,
+      media: mediaUrls,
+    });
+
+    await post.save();
+    const populatedPost = await Post.findById(post._id).populate('userId').populate('subscriptionLevel');
+    res.status(201).json({ post: populatedPost });
+  } catch (err) {
+    console.error('Create post error:', err.message, err.stack); // Добавляем стек ошибки
+    res.status(500).json({ error: `Failed to create post: ${err.message}` });
+  }
+});
 // Получение новых постов
 app.get('/api/posts/new', authMiddleware, async (req, res) => {
   try {
