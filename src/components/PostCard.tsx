@@ -13,7 +13,7 @@ interface Post {
   subscriptionLevel: SubscriptionLevel | null;
   media: string[];
   likes: string[];
-  userId: { username: string; avatar: string; _id: string };
+  userId: { username: string; avatar: string; _id: string } | null; // userId может быть null
 }
 
 interface PostCardProps {
@@ -28,23 +28,24 @@ function PostCard({ post, onLike, onOpenPost, currentUser, comments }: PostCardP
   const BASE_URL = 'https://studently-backend.onrender.com';
 
   // Функция для получения корректного URL
-  const getImageUrl = (url: string) => {
+  const getImageUrl = (url: string | undefined) => {
+    if (!url) return 'https://placehold.co/150x150';
     if (url.startsWith('https://res.cloudinary.com')) {
-      return url; // Cloudinary URL, не добавляем BASE_URL
+      return url;
     }
-    return url.startsWith('/uploads') ? `${BASE_URL}${url}` : url || 'https://via.placeholder.com/150';
+    return url.startsWith('/uploads') ? `${BASE_URL}${url}` : url;
   };
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md h-[450px] flex flex-col overflow-hidden">
       <div className="flex items-center mb-2">
         <img
-          src={getImageUrl(post.userId.avatar)}
+          src={getImageUrl(post.userId?.avatar)} // Проверяем post.userId
           alt="Аватар автора"
           className="w-6 h-6 rounded-full mr-2"
         />
         <span className="font-semibold text-xl cursor-pointer hover:underline" onClick={() => onOpenPost(post)}>
-          {post.userId.username}
+          {post.userId?.username || 'Неизвестный автор'} {/* Запасное значение для username */}
         </span>
       </div>
       <h4

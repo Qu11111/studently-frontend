@@ -22,7 +22,7 @@ interface Post {
   subscriptionLevel: SubscriptionLevel | null;
   media: string[];
   likes: string[];
-  userId: User;
+  userId: User | null; // userId может быть null
 }
 
 interface Comment {
@@ -46,11 +46,12 @@ function Category() {
   const BASE_URL = 'https://studently-backend.onrender.com';
 
   // Функция для получения корректного URL
-  const getImageUrl = (url: string) => {
+  const getImageUrl = (url: string | undefined) => {
+    if (!url) return 'https://placehold.co/150x150';
     if (url.startsWith('https://res.cloudinary.com')) {
-      return url; // Cloudinary URL, не добавляем BASE_URL
+      return url;
     }
-    return url.startsWith('/uploads') ? `${BASE_URL}${url}` : url || 'https://via.placeholder.com/150';
+    return url.startsWith('/uploads') ? `${BASE_URL}${url}` : url;
   };
 
   useEffect(() => {
@@ -172,18 +173,22 @@ function Category() {
         {type === 'popular' ? 'Популярные посты' : type === 'new' ? 'Новые посты' : 'Трендовые посты'}
       </h1>
       {error && <p className="text-red-500 mb-4">{error}</p>}
-      <div className="grid grid-cols-3 gap-4">
-        {posts.map((post) => (
-          <PostCard
-            key={post._id}
-            post={post}
-            onLike={handleLikePost}
-            onOpenPost={(p) => setSelectedPost(p)}
-            currentUser={currentUser}
-            comments={comments}
-          />
-        ))}
-      </div>
+      {posts.length === 0 ? (
+        <p className="text-gray-600">Посты отсутствуют</p>
+      ) : (
+        <div className="grid grid-cols-3 gap-4">
+          {posts.map((post) => (
+            <PostCard
+              key={post._id}
+              post={post}
+              onLike={handleLikePost}
+              onOpenPost={(p) => setSelectedPost(p)}
+              currentUser={currentUser}
+              comments={comments}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Модальное окно для просмотра поста */}
       {selectedPost && (
@@ -213,22 +218,26 @@ function Category() {
             <div className="w-1/3 p-4 bg-gray-100 flex flex-col">
               <div className="flex items-center mb-4">
                 <img
-                  src={getImageUrl(selectedPost.userId.avatar)}
+                  src={getImageUrl(selectedPost.userId?.avatar)}
                   alt="Аватар автора"
                   className="w-10 h-10 rounded-full mr-2 cursor-pointer"
                   onClick={() => {
                     setSelectedPost(null);
-                    navigate(`/profile/${selectedPost.userId._id}`);
+                    if (selectedPost.userId) {
+                      navigate(`/profile/${selectedPost.userId._id}`);
+                    }
                   }}
                 />
                 <span
                   className="font-semibold cursor-pointer hover:underline"
                   onClick={() => {
                     setSelectedPost(null);
-                    navigate(`/profile/${selectedPost.userId._id}`);
+                    if (selectedPost.userId) {
+                      navigate(`/profile/${selectedPost.userId._id}`);
+                    }
                   }}
                 >
-                  {selectedPost.userId.username}
+                  {selectedPost.userId?.username || 'Неизвестный автор'}
                 </span>
               </div>
               <h4 className="text-xl font-semibold mb-2">{selectedPost.title}</h4>

@@ -23,7 +23,7 @@ interface Post {
   subscriptionLevel: SubscriptionLevel | null;
   media: string[];
   likes: string[];
-  userId: User;
+  userId: User | null; // userId может быть null
 }
 
 interface Comment {
@@ -51,11 +51,12 @@ function Dashboard() {
   const categories = ['popular', 'new', 'trending'];
 
   // Функция для получения корректного URL
-  const getImageUrl = (url: string) => {
+  const getImageUrl = (url: string | undefined) => {
+    if (!url) return 'https://placehold.co/150x150';
     if (url.startsWith('https://res.cloudinary.com')) {
-      return url; // Cloudinary URL, не добавляем BASE_URL
+      return url;
     }
-    return url.startsWith('/uploads') ? `${BASE_URL}${url}` : url || 'https://via.placeholder.com/150';
+    return url.startsWith('/uploads') ? `${BASE_URL}${url}` : url;
   };
 
   useEffect(() => {
@@ -244,16 +245,20 @@ function Dashboard() {
       {showChat && <Chat onClose={() => setShowChat(false)} />}
       {searchQuery ? (
         <div className="grid gap-4">
-          {popularPosts.map((post) => (
-            <PostCard
-              key={post._id}
-              post={post}
-              onLike={handleLikePost}
-              onOpenPost={(p) => setSelectedPost(p)}
-              currentUser={currentUser}
-              comments={comments}
-            />
-          ))}
+          {popularPosts.length === 0 ? (
+            <p className="text-gray-600">Посты не найдены</p>
+          ) : (
+            popularPosts.map((post) => (
+              <PostCard
+                key={post._id}
+                post={post}
+                onLike={handleLikePost}
+                onOpenPost={(p) => setSelectedPost(p)}
+                currentUser={currentUser}
+                comments={comments}
+              />
+            ))
+          )}
         </div>
       ) : (
         <>
@@ -265,20 +270,24 @@ function Dashboard() {
               >
                 {category === 'popular' ? 'Популярные' : category === 'new' ? 'Новые' : 'Трендовые'}
               </h2>
-              <div className="grid grid-cols-3 gap-4">
-                {(category === 'popular' ? popularPosts : category === 'new' ? newPosts : trendingPosts)
-                  .slice(0, 3)
-                  .map((post) => (
-                    <PostCard
-                      key={post._id}
-                      post={post}
-                      onLike={handleLikePost}
-                      onOpenPost={(p) => setSelectedPost(p)}
-                      currentUser={currentUser}
-                      comments={comments}
-                    />
-                  ))}
-              </div>
+              {(category === 'popular' ? popularPosts : category === 'new' ? newPosts : trendingPosts).length === 0 ? (
+                <p className="text-gray-600">Посты отсутствуют</p>
+              ) : (
+                <div className="grid grid-cols-3 gap-4">
+                  {(category === 'popular' ? popularPosts : category === 'new' ? newPosts : trendingPosts)
+                    .slice(0, 3)
+                    .map((post) => (
+                      <PostCard
+                        key={post._id}
+                        post={post}
+                        onLike={handleLikePost}
+                        onOpenPost={(p) => setSelectedPost(p)}
+                        currentUser={currentUser}
+                        comments={comments}
+                      />
+                    ))}
+                </div>
+              )}
             </div>
           ))}
         </>
@@ -311,22 +320,26 @@ function Dashboard() {
             <div className="w-1/3 p-4 bg-gray-100 flex flex-col">
               <div className="flex items-center mb-4">
                 <img
-                  src={getImageUrl(selectedPost.userId.avatar)}
+                  src={getImageUrl(selectedPost.userId?.avatar)} // Проверяем selectedPost.userId
                   alt="Аватар автора"
                   className="w-10 h-10 rounded-full mr-2 cursor-pointer"
                   onClick={() => {
                     setSelectedPost(null);
-                    navigate(`/profile/${selectedPost.userId._id}`);
+                    if (selectedPost.userId) {
+                      navigate(`/profile/${selectedPost.userId._id}`);
+                    }
                   }}
                 />
                 <span
                   className="font-semibold cursor-pointer hover:underline"
                   onClick={() => {
                     setSelectedPost(null);
-                    navigate(`/profile/${selectedPost.userId._id}`);
+                    if (selectedPost.userId) {
+                      navigate(`/profile/${selectedPost.userId._id}`);
+                    }
                   }}
                 >
-                  {selectedPost.userId.username}
+                  {selectedPost.userId?.username || 'Неизвестный автор'}
                 </span>
               </div>
               <h4 className="text-xl font-semibold mb-2">{selectedPost.title}</h4>
