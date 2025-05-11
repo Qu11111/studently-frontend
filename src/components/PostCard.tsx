@@ -27,19 +27,25 @@ interface PostCardProps {
 function PostCard({ post, onLike, onOpenPost, currentUser, comments }: PostCardProps) {
   const BASE_URL = 'https://studently-backend.onrender.com';
 
+  // Функция для получения корректного URL
+  const getImageUrl = (url: string) => {
+    if (url.startsWith('https://res.cloudinary.com')) {
+      return url; // Cloudinary URL, не добавляем BASE_URL
+    }
+    return url.startsWith('/uploads') ? `${BASE_URL}${url}` : url || 'https://via.placeholder.com/150';
+  };
+
   return (
     <div className="bg-white p-4 rounded-lg shadow-md h-[450px] flex flex-col overflow-hidden">
       <div className="flex items-center mb-2">
         <img
-          src={
-            post.userId.avatar.startsWith('/uploads')
-              ? `${BASE_URL}${post.userId.avatar}`
-              : post.userId.avatar || 'https://via.placeholder.com/150'
-          }
+          src={getImageUrl(post.userId.avatar)}
           alt="Аватар автора"
           className="w-6 h-6 rounded-full mr-2"
         />
-        <span className="font-semibold text-xl cursor-pointer hover:underline" onClick={() => onOpenPost(post)}>{post.userId.username} </span>
+        <span className="font-semibold text-xl cursor-pointer hover:underline" onClick={() => onOpenPost(post)}>
+          {post.userId.username}
+        </span>
       </div>
       <h4
         className="text-xl font-semibold cursor-pointer hover:underline"
@@ -54,11 +60,11 @@ function PostCard({ post, onLike, onOpenPost, currentUser, comments }: PostCardP
             <div onClick={() => onOpenPost(post)} className="cursor-pointer w-full h-full flex justify-center items-center">
               {post.media[0].endsWith('.mp4') || post.media[0].endsWith('.webm') ? (
                 <video controls className="max-w-full max-h-full rounded object-contain">
-                  <source src={`${BASE_URL}${post.media[0]}`} type="video/mp4" />
+                  <source src={getImageUrl(post.media[0])} type="video/mp4" />
                 </video>
               ) : (
                 <img
-                  src={`${BASE_URL}${post.media[0]}`}
+                  src={getImageUrl(post.media[0])}
                   alt="Медиа"
                   className="max-w-full max-h-full rounded object-contain"
                 />

@@ -31,6 +31,8 @@ function Settings({ user, onUpdate, onSubscriptionUpdate }: SettingsProps) {
   const [credits, setCredits] = useState(user.credits);
   const [avatar, setAvatar] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null); // Предпросмотр аватарки
+  const [coverPreview, setCoverPreview] = useState<string | null>(null); // Предпросмотр обложки
   const [subscriptionName, setSubscriptionName] = useState('');
   const [subscriptionPrice, setSubscriptionPrice] = useState('');
   const [subscriptionDescription, setSubscriptionDescription] = useState('');
@@ -53,6 +55,14 @@ function Settings({ user, onUpdate, onSubscriptionUpdate }: SettingsProps) {
   const [editDescriptionError, setEditDescriptionError] = useState('');
 
   const BASE_URL = 'https://studently-backend.onrender.com';
+
+  // Функция для получения корректного URL
+  const getImageUrl = (url: string) => {
+    if (url.startsWith('https://res.cloudinary.com')) {
+      return url; // Cloudinary URL, не добавляем BASE_URL
+    }
+    return url.startsWith('/uploads') ? `${BASE_URL}${url}` : url || 'https://via.placeholder.com/150';
+  };
 
   // Загрузка подписок
   useEffect(() => {
@@ -104,7 +114,31 @@ function Settings({ user, onUpdate, onSubscriptionUpdate }: SettingsProps) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [onUpdate]);
 
-  // Обработка выбора картинки для создания
+  // Обработка выбора аватарки
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setAvatar(file);
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarPreview(previewUrl);
+    } else {
+      setAvatarPreview(null);
+    }
+  };
+
+  // Обработка выбора обложки
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setCover(file);
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      setCoverPreview(previewUrl);
+    } else {
+      setCoverPreview(null);
+    }
+  };
+
+  // Обработка выбора картинки для создания подписки
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setSubscriptionImage(file);
@@ -116,7 +150,7 @@ function Settings({ user, onUpdate, onSubscriptionUpdate }: SettingsProps) {
     }
   };
 
-  // Обработка выбора картинки для редактирования
+  // Обработка выбора картинки для редактирования подписки
   const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setEditImage(file);
@@ -246,6 +280,7 @@ function Settings({ user, onUpdate, onSubscriptionUpdate }: SettingsProps) {
       if (data.error) throw new Error(data.error);
       onUpdate({ avatar: data.avatar });
       setAvatar(null);
+      setAvatarPreview(null);
       setError('');
     } catch (err: any) {
       console.error('Upload avatar error:', err.message);
@@ -280,6 +315,7 @@ function Settings({ user, onUpdate, onSubscriptionUpdate }: SettingsProps) {
       if (data.error) throw new Error(data.error);
       onUpdate({ cover: data.cover });
       setCover(null);
+      setCoverPreview(null);
       setError('');
     } catch (err: any) {
       console.error('Upload cover error:', err.message);
@@ -466,18 +502,32 @@ function Settings({ user, onUpdate, onSubscriptionUpdate }: SettingsProps) {
           <input
             type="file"
             accept="image/jpeg,image/png"
-            onChange={(e) => setAvatar(e.target.files?.[0] || null)}
+            onChange={handleAvatarChange}
             className="w-full p-2"
           />
+          {avatarPreview && (
+            <img
+              src={avatarPreview}
+              alt="Предпросмотр аватарки"
+              className="mt-2 w-16 h-16 rounded object-cover"
+            />
+          )}
         </div>
         <div>
           <label className="block text-gray-700">Обложка</label>
           <input
             type="file"
             accept="image/jpeg,image/png"
-            onChange={(e) => setCover(e.target.files?.[0] || null)}
+            onChange={handleCoverChange}
             className="w-full p-2"
           />
+          {coverPreview && (
+            <img
+              src={coverPreview}
+              alt="Предпросмотр обложки"
+              className="mt-2 w-32 h-8 rounded object-cover"
+            />
+          )}
         </div>
         <div className="flex gap-2">
           <button
@@ -624,7 +674,7 @@ function Settings({ user, onUpdate, onSubscriptionUpdate }: SettingsProps) {
                   <p className="text-gray-600">{sub.price} кредитов</p>
                   <p className="text-gray-600">{sub.description}</p>
                   <img
-                    src={sub.image.startsWith('/uploads') ? `${BASE_URL}${sub.image}` : sub.image}
+                    src={getImageUrl(sub.image)}
                     alt={sub.name}
                     className="w-16 h-16 rounded object-cover mt-2"
                   />

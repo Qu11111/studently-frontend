@@ -1,0 +1,304 @@
+[{
+  "_id": {
+    "$oid": "681c1c970b85dbd4fcd2a583"
+  },
+  "content": "говно ты",
+  "userId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "recipientId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T02:53:11.157Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681c1ca20b85dbd4fcd2a5a1"
+  },
+  "content": "ахахах",
+  "userId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "recipientId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T02:53:22.667Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681c1cfa0b85dbd4fcd2a63a"
+  },
+  "content": "сам такой",
+  "userId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "recipientId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T02:54:50.302Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681c1f850b85dbd4fcd2a7af"
+  },
+  "content": "прив",
+  "userId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "recipientId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T03:05:41.902Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681c1faf0b85dbd4fcd2a85a"
+  },
+  "content": "крыса",
+  "userId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "recipientId": {
+    "$oid": "681a5decef24d45b58c965e5"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T03:06:23.752Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681c26d620d30a22b54ec48b"
+  },
+  "content": "f[f[f[[asdasd",
+  "userId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "recipientId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T03:36:54.723Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681c26e220d30a22b54ec49e"
+  },
+  "content": "хахаха",
+  "userId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "recipientId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T03:37:06.805Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681c285a20d30a22b54ec535"
+  },
+  "content": "1",
+  "userId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "recipientId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T03:43:22.114Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681c2cf56a0eba78ac46a82e"
+  },
+  "content": "1",
+  "userId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "recipientId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T04:03:01.414Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681c322d2a69ad3a7c64bf1f"
+  },
+  "content": "f[fas",
+  "userId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "recipientId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T04:25:17.850Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681cd4b730e69336dd891353"
+  },
+  "content": "312312123",
+  "userId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "recipientId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T15:58:47.105Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681cd54230e69336dd89138a"
+  },
+  "content": "ghbdtn",
+  "userId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "recipientId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T16:01:06.159Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681cd56830e69336dd891466"
+  },
+  "content": "re",
+  "userId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "recipientId": {
+    "$oid": "681a5decef24d45b58c965e5"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T16:01:44.088Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681cd9267ecc098cf1737bd2"
+  },
+  "content": "ты чмо",
+  "userId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "recipientId": {
+    "$oid": "681a5decef24d45b58c965e5"
+  },
+  "createdAt": {
+    "$date": "2025-05-08T16:17:42.791Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681e922319fecb8e69586490"
+  },
+  "content": "cksi",
+  "userId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "recipientId": {
+    "$oid": "681cd9d77ecc098cf1737e93"
+  },
+  "createdAt": {
+    "$date": "2025-05-09T23:39:15.885Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681ea58ce2c7afc5a11d03bc"
+  },
+  "content": "df",
+  "userId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "recipientId": {
+    "$oid": "681cd9d77ecc098cf1737e93"
+  },
+  "createdAt": {
+    "$date": "2025-05-10T01:02:04.282Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681ea5e6e2c7afc5a11d05c3"
+  },
+  "content": "gs",
+  "userId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "recipientId": {
+    "$oid": "681a5decef24d45b58c965e5"
+  },
+  "createdAt": {
+    "$date": "2025-05-10T01:03:34.745Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681ea611e2c7afc5a11d0632"
+  },
+  "content": "213",
+  "userId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "recipientId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "createdAt": {
+    "$date": "2025-05-10T01:04:17.180Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681eadbb1df5145f3560549c"
+  },
+  "content": "AAA",
+  "userId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "recipientId": {
+    "$oid": "681a5decef24d45b58c965e5"
+  },
+  "createdAt": {
+    "$date": "2025-05-10T01:36:59.083Z"
+  },
+  "__v": 0
+}]

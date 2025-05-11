@@ -50,6 +50,14 @@ function Dashboard() {
   const BASE_URL = 'https://studently-backend.onrender.com';
   const categories = ['popular', 'new', 'trending'];
 
+  // Функция для получения корректного URL
+  const getImageUrl = (url: string) => {
+    if (url.startsWith('https://res.cloudinary.com')) {
+      return url; // Cloudinary URL, не добавляем BASE_URL
+    }
+    return url.startsWith('/uploads') ? `${BASE_URL}${url}` : url || 'https://via.placeholder.com/150';
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem('token');
@@ -285,11 +293,11 @@ function Dashboard() {
                   <div key={index} className="mb-4">
                     {url.endsWith('.mp4') || url.endsWith('.webm') ? (
                       <video controls className="w-full max-h-[70vh] rounded object-contain">
-                        <source src={`${BASE_URL}${url}`} type="video/mp4" />
+                        <source src={getImageUrl(url)} type="video/mp4" />
                       </video>
                     ) : (
                       <img
-                        src={`${BASE_URL}${url}`}
+                        src={getImageUrl(url)}
                         alt="Медиа"
                         className="w-full max-h-[70vh] rounded object-contain"
                       />
@@ -303,11 +311,7 @@ function Dashboard() {
             <div className="w-1/3 p-4 bg-gray-100 flex flex-col">
               <div className="flex items-center mb-4">
                 <img
-                  src={
-                    selectedPost.userId.avatar.startsWith('/uploads')
-                      ? `${BASE_URL}${selectedPost.userId.avatar}`
-                      : selectedPost.userId.avatar || 'https://via.placeholder.com/150'
-                  }
+                  src={getImageUrl(selectedPost.userId.avatar)}
                   alt="Аватар автора"
                   className="w-10 h-10 rounded-full mr-2 cursor-pointer"
                   onClick={() => {
@@ -344,11 +348,7 @@ function Dashboard() {
                   comments[selectedPost._id].map((comment) => (
                     <div key={comment._id} className="border-t pt-2 mt-2 flex items-start">
                       <img
-                        src={
-                          comment.userId.avatar.startsWith('/uploads')
-                            ? `${BASE_URL}${comment.userId.avatar}`
-                            : comment.userId.avatar || 'https://via.placeholder.com/150'
-                        }
+                        src={getImageUrl(comment.userId.avatar)}
                         alt="Аватар комментатора"
                         className="w-8 h-8 rounded-full mr-2 cursor-pointer"
                         onClick={() => {

@@ -12,16 +12,31 @@ app.use(cors());
 app.use(express.json());
 
 // Статическая папка для загрузок
-app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+// Настройка Cloudinary
+cloudinary.config({
+  cloud_name: 'dmawshrng',
+  api_key: '442788134913747',
+  api_secret: 'FWAIH_YN5KpwEwqiTQ7ArAY8F3o',
+});
 // Настройка multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'Uploads/');
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}${ext}`);
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'studently/uploads',
+    allowed_formats: ['jpg', 'png', 'mp4', 'webm'],
+    unique_filename: false, // Отключаем добавление случайного суффикса
+    overwrite: true, // Перезаписываем файлы с одинаковыми именами
+    public_id: (req, file) => {
+      const ext = path.extname(file.originalname); // Получаем расширение
+      const name = file.originalname.replace(ext, ''); // Убираем расширение из имени
+      return name; // Используем оригинальное имя файла как public_id
+    },
   },
 });
 
@@ -36,7 +51,6 @@ const upload = multer({
     }
   },
 });
-
 // Подключение к MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/boosty-clone', {
   useNewUrlParser: true,
@@ -169,7 +183,7 @@ app.post('/api/auth/login', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
-
+app.get('/ping', (req, res) => res.send('OK'));
 // Получение данных текущего пользователя
 app.get('/api/auth/me', authMiddleware, async (req, res) => {
   try {
@@ -219,7 +233,7 @@ app.post('/api/upload/avatar', authMiddleware, upload.single('avatar'), async (r
       console.log('POST /api/upload/avatar: Пользователь не найден, userId:', req.userId);
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
-    user.avatar = `/uploads/${req.file.filename}`;
+    user.avatar = req.file.path; // URL от Cloudinary
     await user.save();
     res.json({ avatar: user.avatar });
   } catch (error) {
@@ -236,7 +250,7 @@ app.post('/api/upload/cover', authMiddleware, upload.single('cover'), async (req
       console.log('POST /api/upload/cover: Пользователь не найден, userId:', req.userId);
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
-    user.cover = `/uploads/${req.file.filename}`;
+    user.cover = req.file.path; // URL от Cloudinary
     await user.save();
     res.json({ cover: user.cover });
   } catch (error) {
@@ -249,7 +263,8 @@ app.post('/api/upload/cover', authMiddleware, upload.single('cover'), async (req
 app.post('/api/subscriptions', authMiddleware, upload.single('image'), async (req, res) => {
   try {
     const { name, price, description } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : 'https://via.placeholder.com/150';
+    const image = req.file ? req.file.path : 'https://via.placeholder.com/150'; // Используем Cloudinary URL
+    console.log('Uploaded subscription image URL:', image); // Добавь отладку
     const subscriptionLevel = new SubscriptionLevel({
       name,
       price,
@@ -283,7 +298,8 @@ app.put('/api/subscriptions/:id', authMiddleware, upload.single('image'), async 
     subscriptionLevel.price = price || subscriptionLevel.price;
     subscriptionLevel.description = description || subscriptionLevel.description;
     if (req.file) {
-      subscriptionLevel.image = `/uploads/${req.file.filename}`;
+      subscriptionLevel.image = req.file.path; // Используем Cloudinary URL
+      console.log('Updated subscription image URL:', subscriptionLevel.image);
     }
 
     await subscriptionLevel.save();
@@ -408,7 +424,7 @@ app.get('/api/users/:id/subscriptions', async (req, res) => {
 app.post('/api/posts', authMiddleware, upload.array('media', 5), async (req, res) => {
   try {
     const { title, content, subscriptionLevel } = req.body;
-    const media = req.files.map(file => `/uploads/${file.filename}`);
+    const media = req.files.map(file => file.path); // URLs от Cloudinary
     const post = new Post({
       title,
       content,
@@ -444,7 +460,8 @@ app.put('/api/posts/:id', authMiddleware, upload.array('media', 5), async (req, 
     post.content = content || post.content;
     post.subscriptionLevel = subscriptionLevel === '' ? null : subscriptionLevel || post.subscriptionLevel;
     if (req.files.length > 0) {
-      post.media = req.files.map(file => `/uploads/${file.filename}`);
+      post.media = req.files.map(file => file.path); // Используем Cloudinary URL
+      console.log('Updated post media URLs:', post.media);
     }
 
     await post.save();

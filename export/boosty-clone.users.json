@@ -1,0 +1,157 @@
+[{
+  "_id": {
+    "$oid": "681a5decef24d45b58c965e5"
+  },
+  "username": "New POPE",
+  "email": "yandex@mail.ru",
+  "password": "$2b$10$3jS0I1DKi2pN2hX1irPfLe/OXHApyn56nuRYkcpQsmk58623HXBzC",
+  "__v": 1,
+  "avatar": "/uploads/1746647812327.jpg",
+  "cover": "/uploads/1746647873769.jpg",
+  "credits": 1022,
+  "description": "",
+  "purchasedSubscriptions": []
+},
+{
+  "_id": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "username": "new popee",
+  "email": "papee@ma.ru",
+  "password": "$2a$10$I7zvpAyngEWXPlfllh9/.OG6Uh.5oRXPKfB68eGTDQf.ZhqhKlDEe",
+  "subscriptionLevel": {
+    "$oid": "681c33fa2a69ad3a7c64c019"
+  },
+  "avatar": "/uploads/1746689855444.jpg",
+  "cover": "/uploads/1746648537804.jpg",
+  "__v": 6,
+  "description": "талантлив во всем, просто не везет",
+  "credits": 180,
+  "purchasedSubscriptions": [
+    {
+      "$oid": "681c3c74bb38c743bdf9409d"
+    },
+    {
+      "$oid": "681c33fa2a69ad3a7c64c019"
+    },
+    {
+      "$oid": "681cdf2f7ecc098cf173820b"
+    },
+    {
+      "$oid": "681bb3d267bc9b5dff61a5bf"
+    },
+    {
+      "$oid": "681e9f25f8dc4da5f7079968"
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "username": "UUaaa",
+  "email": "aa222a@ma.ru",
+  "password": "$2a$10$.Z97cwwplJR0vQuHs0TzkeKVL4oGWZSgB48cmjKkQCXKoC4v7kJOK",
+  "description": "UUaddd",
+  "subscriptionLevel": null,
+  "avatar": "/uploads/1746841103380.jpg",
+  "cover": "/uploads/1746841117969.jpg",
+  "__v": 5,
+  "credits": 854,
+  "purchasedSubscriptions": [
+    {
+      "$oid": "681c369d0792a6463b238b7d"
+    },
+    {
+      "$oid": "681ea65fe2c7afc5a11d07ae"
+    },
+    {
+      "$oid": "681e9f25f8dc4da5f7079968"
+    },
+    {
+      "$oid": "681bb3d267bc9b5dff61a5bf"
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "681c1598a5133064a1ca7057"
+  },
+  "username": "1232",
+  "email": "papee1@ma.ru",
+  "password": "$2a$10$SNObsrkE5hK6griVnGI3dOJVSwUvgbd3Rt1xVqUhw1IUQV8Jb6Gt.",
+  "description": "",
+  "subscriptionLevel": null,
+  "avatar": "https://via.placeholder.com/150",
+  "cover": "https://via.placeholder.com/1200x300",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681c2c996a0eba78ac46a6fd"
+  },
+  "username": "22111212",
+  "email": "papeeaaaasdsa@ma.ru",
+  "password": "$2a$10$BQKayYPRU4b10mPAexwh7.wChssn9eurypcE9ALJP.yxUWFmCtRP6",
+  "description": "",
+  "subscriptionLevel": null,
+  "avatar": "https://via.placeholder.com/150",
+  "cover": "https://via.placeholder.com/1200x300",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681c3b5b985d994a3d2d6216"
+  },
+  "username": "34",
+  "email": "papeed@ma.ru",
+  "password": "$2a$10$8IWgDN3aJFp3EbcjNbEL/eb7dGp97SCdKpl0fpciS8zqxSbv/ZkDm",
+  "description": "",
+  "subscriptionLevel": null,
+  "avatar": "https://via.placeholder.com/150",
+  "cover": "https://via.placeholder.com/1200x300",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681c59dd563cdb4460a7b20a"
+  },
+  "username": "23",
+  "email": "papfede@ma.ru",
+  "password": "$2a$10$4i9gFUSb3OzL7PSDQEFHKOcdlnoEhp1Dl2jL7LCQ.wxlyKXQxM4Vq",
+  "description": "",
+  "subscriptionLevel": null,
+  "avatar": "https://via.placeholder.com/150",
+  "cover": "https://via.placeholder.com/1200x300",
+  "credits": 1000,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681cd9d77ecc098cf1737e93"
+  },
+  "username": "лехалох",
+  "email": "papee312@ma.ru",
+  "password": "$2a$10$9xfb4lEVkjMPbw7KuYv3B.ZjfFt7KXlu.ODd1WmLvmTGetchVw9qS",
+  "description": "я говно",
+  "subscriptionLevel": null,
+  "avatar": "/uploads/1746721266713.png",
+  "cover": "/uploads/1746721266730.jpg",
+  "credits": 1024,
+  "__v": 1,
+  "purchasedSubscriptions": []
+},
+{
+  "_id": {
+    "$oid": "681ee1f4df403c0a2bf06c2e"
+  },
+  "username": "вфы",
+  "email": "фвы@asd.ras",
+  "password": "$2a$10$Sfwoo4H3SeFUVwlmP4xE6.QjNA04anXk5myT2vhZtsM1Zf8X80U56",
+  "description": "",
+  "purchasedSubscriptions": [],
+  "avatar": "https://via.placeholder.com/150",
+  "cover": "https://via.placeholder.com/1200x300",
+  "credits": 1000,
+  "__v": 0
+}]

@@ -1,0 +1,113 @@
+[{
+  "_id": {
+    "$oid": "681bb1f306ffd50a84bdddd9"
+  },
+  "name": "НУБСКИЙ",
+  "price": 1111,
+  "creatorId": {
+    "$oid": "681a5decef24d45b58c965e5"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681bb3d267bc9b5dff61a5bf"
+  },
+  "name": "dd",
+  "price": 11,
+  "creatorId": {
+    "$oid": "681a5decef24d45b58c965e5"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681bbee29a00d3a3be4dc3ba"
+  },
+  "name": "nogi",
+  "price": 131,
+  "creatorId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "__v": 0,
+  "description": "oo",
+  "image": "/uploads/1746682072192.jpg"
+},
+{
+  "_id": {
+    "$oid": "681c33fa2a69ad3a7c64c019"
+  },
+  "name": "бомбордиро",
+  "price": 1,
+  "image": "/uploads/1746678778704.jpg",
+  "creatorId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "__v": 0,
+  "description": "lk"
+},
+{
+  "_id": {
+    "$oid": "681c369d0792a6463b238b7d"
+  },
+  "name": "БАМБАМ",
+  "price": 123,
+  "image": "/uploads/1746679453924.png",
+  "description": "КУПИТЕ ПЖ",
+  "creatorId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681c3c74bb38c743bdf9409d"
+  },
+  "name": "DA",
+  "price": 3,
+  "image": "/uploads/1746680948815.jpg",
+  "description": "DA",
+  "creatorId": {
+    "$oid": "681bbdb99a00d3a3be4dc397"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681cdf2f7ecc098cf173820b"
+  },
+  "name": "купи ноги",
+  "price": 12,
+  "image": "/uploads/1746722607451.jpg",
+  "description": "купи",
+  "creatorId": {
+    "$oid": "681cd9d77ecc098cf1737e93"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681e9f25f8dc4da5f7079968"
+  },
+  "name": "BLABLA",
+  "price": 1,
+  "image": "/uploads/1746837285118.jpg",
+  "description": "BLA",
+  "creatorId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681ea65fe2c7afc5a11d07ae"
+  },
+  "name": "12",
+  "price": 12,
+  "image": "/uploads/1746839135107.jpg",
+  "description": "ddddddd",
+  "creatorId": {
+    "$oid": "681bdb41b14be3f3ae90e061"
+  },
+  "__v": 0
+}]
