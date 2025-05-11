@@ -184,52 +184,62 @@ function Profile() {
   };
 
   // Создание поста
-  const handleCreatePost = async () => {
-    if (!validatePost(false)) {
-      return;
-    }
+ const handleCreatePost = async () => {
+  if (!validatePost(false)) {
+    return;
+  }
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Пожалуйста, войдите в систему');
-      return;
-    }
+  const token = localStorage.getItem('token');
+  if (!token) {
+    setError('Пожалуйста, войдите в систему');
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('content', content);
-    if (selectedLevel) {
-      formData.append('subscriptionLevel', selectedLevel);
-    }
-    mediaFiles.forEach((file) => {
-      formData.append('media', file);
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('content', content);
+  if (selectedLevel) {
+    formData.append('subscriptionLevel', selectedLevel);
+  }
+  mediaFiles.forEach((file) => {
+    formData.append('media', file);
+  });
+
+  try {
+    const response = await fetch(`${BASE_URL}/api/posts`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
     });
-
-    try {
-      const response = await fetch(`${BASE_URL}/api/posts`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      if (!response.ok) throw new Error(`Ошибка HTTP: ${response.status}`);
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-
-      setPosts([data.post, ...posts]);
-      setShowCreatePostModal(false);
-      setTitle('');
-      setContent('');
-      setSelectedLevel('');
-      setMediaFiles([]);
-      setMediaPreviews([]);
-      setTitleError('');
-      setContentError('');
-      setError('');
-    } catch (err: any) {
-      console.log('Create post error:', err.message);
-      setError(err.message);
+    if (!response.ok) {
+      const errorData = await response.json();
+      if (response.status === 401) {
+        setError('Ваш сеанс истёк. Пожалуйста, войдите снова.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        navigate('/welcome');
+        return;
+      }
+      throw new Error(errorData.error || `Ошибка HTTP: ${response.status}`);
     }
-  };
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+
+    setPosts([data.post, ...posts]);
+    setShowCreatePostModal(false);
+    setTitle('');
+    setContent('');
+    setSelectedLevel('');
+    setMediaFiles([]);
+    setMediaPreviews([]);
+    setTitleError('');
+    setContentError('');
+    setError('');
+  } catch (err: any) {
+    console.log('Create post error:', err.message);
+    setError(err.message || 'Не удалось создать пост. Попробуйте снова.');
+  }
+};
 
   // Редактирование поста
   const handleEditPost = async () => {
