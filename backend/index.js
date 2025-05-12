@@ -6,14 +6,14 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const WebSocket = require('ws');
+const fs = require('fs').promises; // Для удаления временных файлов
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Статическая папка для загрузок
+// Статическая папка для загрузок (оставляем для совместимости, хотя используем Cloudinary)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
@@ -24,38 +24,33 @@ cloudinary.config({
   api_key: '442788134913747',
   api_secret: 'FWAIH_YN5KpwEwqiTQ7ArAY8F3o',
 });
-// Настройка multer
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'studently/uploads',
-    allowed_formats: ['jpg', 'png', 'mp4', 'webm'],
-    unique_filename: false, // Отключаем добавление случайного суффикса
-    overwrite: true, // Перезаписываем файлы с одинаковыми именами
-    public_id: (req, file) => {
-      const ext = path.extname(file.originalname); // Получаем расширение
-      const name = file.originalname.replace(ext, ''); // Убираем расширение из имени
-      return name; // Используем оригинальное имя файла как public_id
-    },
-  },
-});
 
+// Настройка multer для локального хранения временных файлов
 const upload = multer({
-  storage,
+  storage: multer.diskStorage({
+    destination: 'uploads/',
+    filename: (req, file, cb) => {
+      cb(null, `${Date.now()}-${file.originalname}`);
+    },
+  }),
+  limits: { fileSize: 200 * 1024 * 1024 }, // Увеличиваем лимит до 200 МБ
   fileFilter: (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4', 'video/webm'];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Неподдерживаемый тип файла'), false);
+      cb(new Error('Неподдерживаемый тип файла. Используйте JPEG, PNG, MP4 или WebM'), false);
     }
   },
 });
+
 // Подключение к MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/boosty-clone', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log('MongoDB подключен'))
+mongoose
+  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/boosty-clone', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log('MongoDB подключен'))
   .catch((err) => console.error('Ошибка MongoDB:', err));
 
 // Схема пользователя
@@ -65,8 +60,8 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   description: { type: String, default: '' },
   purchasedSubscriptions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'SubscriptionLevel' }],
-  avatar: { type: String, default: 'https://via.placeholder.com/150' },
-  cover: { type: String, default: 'https://via.placeholder.com/1200x300' },
+  avatar: { type: String, default: 'https://placehold.co/150x150' },
+  cover: { type: String, default: 'https://placehold.co/1200x300' },
   credits: { type: Number, default: 1000 },
 });
 
@@ -76,7 +71,7 @@ const User = mongoose.model('User', userSchema);
 const subscriptionLevelSchema = new mongoose.Schema({
   name: { type: String, required: true },
   price: { type: Number, required: true },
-  image: { type: String, default: 'https://via.placeholder.com/150' },
+  image: { type: String, default: 'https://placehold.co/150x150' },
   description: { type: String, default: '' },
   creatorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 });
@@ -123,21 +118,28 @@ const validateEmail = (email) => {
 };
 
 // Middleware для проверки токена
-const auth = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
+const authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
-    return res.status(401).json({ error: 'Токен отсутствует' });
+    console.log('authMiddleware: Токен не предоставлен');
+    return res.status(401).json({ error: 'Токен не предоставлен' });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    const decoded = jwt.verify(token, 'secret_key');
+    req.userId = decoded.userId;
     next();
-  } catch (err) {
-    console.error('authMiddleware:', err.message);
+  } catch (error) {
+    console.log('authMiddleware: Неверный токен', error.message);
     res.status(401).json({ error: 'Неверный токен' });
   }
 };
+
+// Глобальный обработчик ошибок
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', err.message, err.stack);
+  res.status(500).json({ error: `Internal Server Error: ${err.message}` });
+});
 
 // Регистрация
 app.post('/api/auth/register', async (req, res) => {
@@ -151,7 +153,7 @@ app.post('/api/auth/register', async (req, res) => {
     await user.save();
     res.status(201).json({ message: 'Пользователь зарегистрирован' });
   } catch (error) {
-    console.log('POST /api/auth/register: Ошибка:', error.message);
+    console.log('POST /api/auth/register: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -178,11 +180,13 @@ app.post('/api/auth/login', async (req, res) => {
     const token = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '1h' });
     res.json({ token });
   } catch (error) {
-    console.log('POST /api/auth/login: Ошибка:', error.message);
+    console.log('POST /api/auth/login: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
+
 app.get('/ping', (req, res) => res.send('OK'));
+
 // Получение данных текущего пользователя
 app.get('/api/auth/me', authMiddleware, async (req, res) => {
   try {
@@ -193,7 +197,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
     }
     res.json(user);
   } catch (error) {
-    console.log('GET /api/auth/me: Ошибка:', error.message);
+    console.log('GET /api/auth/me: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -219,7 +223,7 @@ app.put('/api/auth/update', authMiddleware, async (req, res) => {
     await user.save();
     res.json({ message: 'Профиль обновлён', user: { username: user.username, email: user.email, description: user.description } });
   } catch (error) {
-    console.log('PUT /api/auth/update: Ошибка:', error.message);
+    console.log('PUT /api/auth/update: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -232,11 +236,25 @@ app.post('/api/upload/avatar', authMiddleware, upload.single('avatar'), async (r
       console.log('POST /api/upload/avatar: Пользователь не найден, userId:', req.userId);
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
-    user.avatar = req.file.path; // URL от Cloudinary
+
+    // Загружаем файл на Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'studently/uploads',
+      resource_type: 'image',
+      timeout: 120000,
+    });
+
+    // Удаляем временный файл
+    await fs.unlink(req.file.path);
+
+    user.avatar = result.secure_url;
     await user.save();
     res.json({ avatar: user.avatar });
   } catch (error) {
-    console.log('POST /api/upload/avatar: Ошибка:', error.message);
+    console.log('POST /api/upload/avatar: Ошибка:', error.message, error.stack);
+    if (req.file && req.file.path) {
+      await fs.unlink(req.file.path).catch((err) => console.error('Failed to delete temp file:', err));
+    }
     res.status(400).json({ error: error.message });
   }
 });
@@ -249,11 +267,25 @@ app.post('/api/upload/cover', authMiddleware, upload.single('cover'), async (req
       console.log('POST /api/upload/cover: Пользователь не найден, userId:', req.userId);
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
-    user.cover = req.file.path; // URL от Cloudinary
+
+    // Загружаем файл на Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'studently/uploads',
+      resource_type: 'image',
+      timeout: 120000,
+    });
+
+    // Удаляем временный файл
+    await fs.unlink(req.file.path);
+
+    user.cover = result.secure_url;
     await user.save();
     res.json({ cover: user.cover });
   } catch (error) {
-    console.log('POST /api/upload/cover: Ошибка:', error.message);
+    console.log('POST /api/upload/cover: Ошибка:', error.message, error.stack);
+    if (req.file && req.file.path) {
+      await fs.unlink(req.file.path).catch((err) => console.error('Failed to delete temp file:', err));
+    }
     res.status(400).json({ error: error.message });
   }
 });
@@ -262,8 +294,17 @@ app.post('/api/upload/cover', authMiddleware, upload.single('cover'), async (req
 app.post('/api/subscriptions', authMiddleware, upload.single('image'), async (req, res) => {
   try {
     const { name, price, description } = req.body;
-    const image = req.file ? req.file.path : 'https://via.placeholder.com/150'; // Используем Cloudinary URL
-    console.log('Uploaded subscription image URL:', image); // Добавь отладку
+    let image = 'https://placehold.co/150x150';
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'studently/uploads',
+        resource_type: 'image',
+        timeout: 120000,
+      });
+      image = result.secure_url;
+      await fs.unlink(req.file.path);
+    }
+    console.log('Uploaded subscription image URL:', image);
     const subscriptionLevel = new SubscriptionLevel({
       name,
       price,
@@ -274,7 +315,10 @@ app.post('/api/subscriptions', authMiddleware, upload.single('image'), async (re
     await subscriptionLevel.save();
     res.status(201).json({ message: 'Уровень подписки создан', subscriptionLevel });
   } catch (error) {
-    console.log('POST /api/subscriptions: Ошибка:', error.message);
+    console.log('POST /api/subscriptions: Ошибка:', error.message, error.stack);
+    if (req.file && req.file.path) {
+      await fs.unlink(req.file.path).catch((err) => console.error('Failed to delete temp file:', err));
+    }
     res.status(400).json({ error: error.message });
   }
 });
@@ -297,14 +341,23 @@ app.put('/api/subscriptions/:id', authMiddleware, upload.single('image'), async 
     subscriptionLevel.price = price || subscriptionLevel.price;
     subscriptionLevel.description = description || subscriptionLevel.description;
     if (req.file) {
-      subscriptionLevel.image = req.file.path; // Используем Cloudinary URL
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'studently/uploads',
+        resource_type: 'image',
+        timeout: 120000,
+      });
+      subscriptionLevel.image = result.secure_url;
       console.log('Updated subscription image URL:', subscriptionLevel.image);
+      await fs.unlink(req.file.path);
     }
 
     await subscriptionLevel.save();
     res.json({ message: 'Подписка обновлена', subscriptionLevel });
   } catch (error) {
-    console.log('PUT /api/subscriptions/:id: Ошибка:', error.message);
+    console.log('PUT /api/subscriptions/:id: Ошибка:', error.message, error.stack);
+    if (req.file && req.file.path) {
+      await fs.unlink(req.file.path).catch((err) => console.error('Failed to delete temp file:', err));
+    }
     res.status(400).json({ error: error.message });
   }
 });
@@ -325,7 +378,7 @@ app.delete('/api/subscriptions/:id', authMiddleware, async (req, res) => {
     await subscriptionLevel.deleteOne();
     res.json({ message: 'Подписка удалена' });
   } catch (error) {
-    console.log('DELETE /api/subscriptions/:id: Ошибка:', error.message);
+    console.log('DELETE /api/subscriptions/:id: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -349,17 +402,14 @@ app.post('/api/subscriptions/:id/purchase', authMiddleware, async (req, res) => 
       return res.status(400).json({ error: 'Недостаточно кредитов' });
     }
 
-    // Проверяем, не куплена ли подписка
     if (user.purchasedSubscriptions.includes(subscriptionLevel._id)) {
       console.log('POST /api/subscriptions/:id/purchase: Подписка уже куплена, userId:', req.userId);
       return res.status(400).json({ error: 'Подписка уже куплена' });
     }
 
-    // Вычитаем кредиты у покупателя
     user.credits -= subscriptionLevel.price;
     user.purchasedSubscriptions.push(subscriptionLevel._id);
 
-    // Начисляем кредиты создателю подписки
     const creator = await User.findById(subscriptionLevel.creatorId);
     if (!creator) {
       console.log('POST /api/subscriptions/:id/purchase: Создатель не найден, creatorId:', subscriptionLevel.creatorId);
@@ -373,7 +423,7 @@ app.post('/api/subscriptions/:id/purchase', authMiddleware, async (req, res) => 
     const updatedUser = await User.findById(req.userId).select('-password').populate('purchasedSubscriptions');
     res.json({ message: 'Подписка приобретена', user: updatedUser });
   } catch (error) {
-    console.log('POST /api/subscriptions/:id/purchase: Ошибка:', error.message);
+    console.log('POST /api/subscriptions/:id/purchase: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -392,7 +442,7 @@ app.get('/api/subscriptions/purchased', authMiddleware, async (req, res) => {
 
     res.json(user.purchasedSubscriptions || []);
   } catch (error) {
-    console.log('GET /api/subscriptions/purchased: Ошибка:', error.message);
+    console.log('GET /api/subscriptions/purchased: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -403,7 +453,7 @@ app.get('/api/subscriptions', authMiddleware, async (req, res) => {
     const subscriptionLevels = await SubscriptionLevel.find({ creatorId: req.userId });
     res.json(subscriptionLevels);
   } catch (error) {
-    console.log('GET /api/subscriptions: Ошибка:', error.message);
+    console.log('GET /api/subscriptions: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -414,7 +464,7 @@ app.get('/api/users/:id/subscriptions', async (req, res) => {
     const subscriptionLevels = await SubscriptionLevel.find({ creatorId: req.params.id });
     res.json(subscriptionLevels);
   } catch (error) {
-    console.log('GET /api/users/:id/subscriptions: Ошибка:', error.message);
+    console.log('GET /api/users/:id/subscriptions: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -423,21 +473,72 @@ app.get('/api/users/:id/subscriptions', async (req, res) => {
 app.post('/api/posts', authMiddleware, upload.array('media', 5), async (req, res) => {
   try {
     const { title, content, subscriptionLevel } = req.body;
-    const media = req.files.map(file => file.path); // URLs от Cloudinary
+    if (!title || !content) {
+      console.log('POST /api/posts: Требуется заголовок и содержимое');
+      return res.status(400).json({ error: 'Требуется заголовок и содержимое' });
+    }
+
+    let mediaUrls = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        if (!file.size) {
+          console.log('POST /api/posts: Размер файла не определён:', file);
+          return res.status(400).json({ error: 'Размер файла не определён' });
+        }
+
+        if (file.size > 200 * 1024 * 1024) {
+          console.log('POST /api/posts: Файл превышает лимит в 200 МБ, размер:', file.size);
+          return res.status(400).json({ error: 'File size exceeds 200 MB limit' });
+        }
+
+        const allowedVideoFormats = ['video/mp4', 'video/webm'];
+        if (file.mimetype.startsWith('video/') && !allowedVideoFormats.includes(file.mimetype)) {
+          console.log('POST /api/posts: Неподдерживаемый формат видео:', file.mimetype);
+          return res.status(400).json({ error: 'Unsupported video format. Use MP4 or WebM' });
+        }
+
+        console.log(`Uploading file to Cloudinary: ${file.path}, type: ${file.mimetype}, size: ${file.size} bytes`);
+        const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: 'studently/uploads',
+          resource_type: resourceType,
+          timeout: 120000,
+        });
+
+        if (!result.secure_url) {
+          console.log('POST /api/posts: Cloudinary upload failed:', result);
+          return res.status(500).json({ error: 'Failed to upload file to Cloudinary' });
+        }
+
+        console.log(`Successfully uploaded file to Cloudinary: ${result.secure_url}`);
+        mediaUrls.push(result.secure_url);
+
+        // Удаляем временный файл
+        await fs.unlink(file.path);
+      }
+    }
+
     const post = new Post({
       title,
       content,
       userId: req.userId,
       subscriptionLevel: subscriptionLevel || null,
-      media,
+      media: mediaUrls,
       likes: [],
     });
     await post.save();
     const populatedPost = await Post.findById(post._id).populate('subscriptionLevel').populate('userId', 'username _id avatar');
     res.status(201).json({ message: 'Пост создан', post: populatedPost });
   } catch (error) {
-    console.log('POST /api/posts: Ошибка:', error.message);
-    res.status(400).json({ error: error.message });
+    console.log('POST /api/posts: Ошибка:', error.message, error.stack);
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        if (file.path) {
+          await fs.unlink(file.path).catch((err) => console.error('Failed to delete temp file:', err));
+        }
+      }
+    }
+    res.status(500).json({ error: `Failed to create post: ${error.message}` });
   }
 });
 
@@ -455,20 +556,64 @@ app.put('/api/posts/:id', authMiddleware, upload.array('media', 5), async (req, 
       return res.status(403).json({ error: 'Нет доступа' });
     }
 
+    let mediaUrls = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        if (!file.size) {
+          console.log('PUT /api/posts/:id: Размер файла не определён:', file);
+          return res.status(400).json({ error: 'Размер файла не определён' });
+        }
+
+        if (file.size > 200 * 1024 * 1024) {
+          console.log('PUT /api/posts/:id: Файл превышает лимит в 200 МБ, размер:', file.size);
+          return res.status(400).json({ error: 'File size exceeds 200 MB limit' });
+        }
+
+        const allowedVideoFormats = ['video/mp4', 'video/webm'];
+        if (file.mimetype.startsWith('video/') && !allowedVideoFormats.includes(file.mimetype)) {
+          console.log('PUT /api/posts/:id: Неподдерживаемый формат видео:', file.mimetype);
+          return res.status(400).json({ error: 'Unsupported video format. Use MP4 or WebM' });
+        }
+
+        console.log(`Uploading file to Cloudinary: ${file.path}, type: ${file.mimetype}, size: ${file.size} bytes`);
+        const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: 'studently/uploads',
+          resource_type: resourceType,
+          timeout: 120000,
+        });
+
+        if (!result.secure_url) {
+          console.log('PUT /api/posts/:id: Cloudinary upload failed:', result);
+          return res.status(500).json({ error: 'Failed to upload file to Cloudinary' });
+        }
+
+        console.log(`Successfully uploaded file to Cloudinary: ${result.secure_url}`);
+        mediaUrls.push(result.secure_url);
+
+        // Удаляем временный файл
+        await fs.unlink(file.path);
+      }
+      post.media = mediaUrls;
+    }
+
     post.title = title || post.title;
     post.content = content || post.content;
     post.subscriptionLevel = subscriptionLevel === '' ? null : subscriptionLevel || post.subscriptionLevel;
-    if (req.files.length > 0) {
-      post.media = req.files.map(file => file.path); // Используем Cloudinary URL
-      console.log('Updated post media URLs:', post.media);
-    }
 
     await post.save();
     const populatedPost = await Post.findById(post._id).populate('subscriptionLevel').populate('userId', 'username _id avatar');
     res.json({ message: 'Пост обновлён', post: populatedPost });
   } catch (error) {
-    console.log('PUT /api/posts/:id: Ошибка:', error.message);
-    res.status(400).json({ error: error.message });
+    console.log('PUT /api/posts/:id: Ошибка:', error.message, error.stack);
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        if (file.path) {
+          await fs.unlink(file.path).catch((err) => console.error('Failed to delete temp file:', err));
+        }
+      }
+    }
+    res.status(500).json({ error: `Failed to update post: ${error.message}` });
   }
 });
 
@@ -488,7 +633,7 @@ app.delete('/api/posts/:id', authMiddleware, async (req, res) => {
     await post.deleteOne();
     res.json({ message: 'Пост удалён' });
   } catch (error) {
-    console.log('DELETE /api/posts/:id: Ошибка:', error.message);
+    console.log('DELETE /api/posts/:id: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -502,7 +647,7 @@ app.get('/api/posts', authMiddleware, async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(posts);
   } catch (error) {
-    console.log('GET /api/posts: Ошибка:', error.message);
+    console.log('GET /api/posts: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -516,7 +661,7 @@ app.get('/api/users/:id/posts', authMiddleware, async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(posts);
   } catch (error) {
-    console.log('GET /api/users/:id/posts: Ошибка:', error.message);
+    console.log('GET /api/users/:id/posts: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -543,63 +688,11 @@ app.get('/api/posts/popular', authMiddleware, async (req, res) => {
       .limit(10);
     res.json(posts);
   } catch (error) {
-    console.log('GET /api/posts/popular: Ошибка:', error.message);
+    console.log('GET /api/posts/popular: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
-router.post('/', auth, upload.array('media', 10), async (req, res) => {
-  try {
-    const { title, content, subscriptionLevel } = req.body;
-    const userId = req.user.id;
 
-    if (!title || !content) {
-      return res.status(400).json({ error: 'Title and content are required' });
-    }
-
-    let mediaUrls = [];
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        if (file.size > 200 * 1024 * 1024) {
-          return res.status(400).json({ error: 'File size exceeds 200 MB limit' });
-        }
-
-        const allowedVideoFormats = ['video/mp4', 'video/webm'];
-        if (file.mimetype.startsWith('video/') && !allowedVideoFormats.includes(file.mimetype)) {
-          return res.status(400).json({ error: 'Unsupported video format. Use MP4 or WebM' });
-        }
-
-        console.log(`Uploading file: ${file.originalname}, type: ${file.mimetype}, size: ${file.size} bytes`);
-        const result = await cloudinary.uploader.upload(file.path, {
-          resource_type: 'auto',
-          folder: 'studently/uploads',
-          timeout: 120000,
-        });
-
-        if (!result.secure_url) {
-          console.error('Cloudinary upload failed:', result);
-          return res.status(500).json({ error: 'Failed to upload file to Cloudinary' });
-        }
-
-        mediaUrls.push(result.secure_url);
-      }
-    }
-
-    const post = new Post({
-      title,
-      content,
-      userId,
-      subscriptionLevel: subscriptionLevel || null,
-      media: mediaUrls,
-    });
-
-    await post.save();
-    const populatedPost = await Post.findById(post._id).populate('userId').populate('subscriptionLevel');
-    res.status(201).json({ post: populatedPost });
-  } catch (err) {
-    console.error('Create post error:', err.message, err.stack); // Добавляем стек ошибки
-    res.status(500).json({ error: `Failed to create post: ${err.message}` });
-  }
-});
 // Получение новых постов
 app.get('/api/posts/new', authMiddleware, async (req, res) => {
   try {
@@ -622,7 +715,7 @@ app.get('/api/posts/new', authMiddleware, async (req, res) => {
       .limit(10);
     res.json(posts);
   } catch (error) {
-    console.log('GET /api/posts/new: Ошибка:', error.message);
+    console.log('GET /api/posts/new: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -649,7 +742,7 @@ app.get('/api/posts/trending', authMiddleware, async (req, res) => {
       .limit(10);
     res.json(posts);
   } catch (error) {
-    console.log('GET /api/posts/trending: Ошибка:', error.message);
+    console.log('GET /api/posts/trending: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -672,7 +765,7 @@ app.post('/api/comments', authMiddleware, async (req, res) => {
     const populatedComment = await Comment.findById(comment._id).populate('userId', 'username avatar _id');
     res.status(201).json({ message: 'Комментарий добавлен', comment: populatedComment });
   } catch (error) {
-    console.log('POST /api/comments: Ошибка:', error.message);
+    console.log('POST /api/comments: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -685,7 +778,7 @@ app.get('/api/posts/:id/comments', authMiddleware, async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(comments);
   } catch (error) {
-    console.log('GET /api/posts/:id/comments: Ошибка:', error.message);
+    console.log('GET /api/posts/:id/comments: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -710,7 +803,7 @@ app.post('/api/posts/:id/like', authMiddleware, async (req, res) => {
     await post.save();
     res.json({ message: 'Лайк обновлён', likes: post.likes });
   } catch (error) {
-    console.log('POST /api/posts/:id/like: Ошибка:', error.message);
+    console.log('POST /api/posts/:id/like: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -722,7 +815,7 @@ app.get('/api/users/random', async (req, res) => {
     const randomUsers = users.sort(() => 0.5 - Math.random()).slice(0, 3);
     res.json(randomUsers);
   } catch (error) {
-    console.log('GET /api/users/random: Ошибка:', error.message);
+    console.log('GET /api/users/random: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -737,7 +830,7 @@ app.get('/api/users/:id', async (req, res) => {
     }
     res.json(user);
   } catch (error) {
-    console.log('GET /api/users/:id: Ошибка:', error.message);
+    console.log('GET /api/users/:id: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -753,7 +846,6 @@ app.get('/api/dialogs', authMiddleware, async (req, res) => {
       .populate('recipientId', 'username avatar _id')
       .sort({ createdAt: -1 });
 
-    // Группировка по собеседнику
     const dialogs = {};
     messages.forEach((msg) => {
       const otherUserId = msg.userId._id.toString() === userId ? msg.recipientId._id.toString() : msg.userId._id.toString();
@@ -768,7 +860,7 @@ app.get('/api/dialogs', authMiddleware, async (req, res) => {
 
     res.json(Object.values(dialogs));
   } catch (error) {
-    console.log('GET /api/dialogs: Ошибка:', error.message);
+    console.log('GET /api/dialogs: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -790,7 +882,7 @@ app.get('/api/messages/:recipientId', authMiddleware, async (req, res) => {
       .limit(50);
     res.json(messages);
   } catch (error) {
-    console.log('GET /api/messages/:recipientId: Ошибка:', error.message);
+    console.log('GET /api/messages/:recipientId: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
@@ -804,13 +896,13 @@ app.get('/api/messages', authMiddleware, async (req, res) => {
       .limit(50);
     res.json(messages);
   } catch (error) {
-    console.log('GET /api/messages: Ошибка:', error.message);
+    console.log('GET /api/messages: Ошибка:', error.message, error.stack);
     res.status(400).json({ error: error.message });
   }
 });
 
 // Запуск HTTP-сервера
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => console.log(`HTTP-сервер запущен на порту ${PORT}`));
 
 // Настройка WebSocket-сервера
@@ -830,7 +922,6 @@ wss.on('connection', (ws) => {
         return;
       }
 
-      // Проверка токена
       const decoded = jwt.verify(token, 'secret_key');
       const userId = decoded.userId;
       const user = await User.findById(userId).select('username avatar _id');
@@ -840,7 +931,6 @@ wss.on('connection', (ws) => {
         return;
       }
 
-      // Проверка получателя
       const recipient = await User.findById(recipientId);
       if (!recipient) {
         console.log('WebSocket: Получатель не найден, recipientId:', recipientId);
@@ -848,7 +938,6 @@ wss.on('connection', (ws) => {
         return;
       }
 
-      // Сохранение сообщения
       const newMessage = new Message({
         content,
         userId,
@@ -861,14 +950,13 @@ wss.on('connection', (ws) => {
 
       console.log('WebSocket: Сообщение сохранено и отправлено:', populatedMessage);
 
-      // Рассылка сообщения
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify(populatedMessage));
         }
       });
     } catch (error) {
-      console.error('WebSocket error:', error.message);
+      console.error('WebSocket error:', error.message, error.stack);
       ws.send(JSON.stringify({ error: 'Ошибка обработки сообщения' }));
     }
   });
